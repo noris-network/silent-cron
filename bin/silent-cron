@@ -1,0 +1,65 @@
+#!/usr/bin/perl
+
+use 5.014;
+use strict;
+use warnings;
+
+use Getopt::Long;
+use File::Basename qw(basename);
+use IPC::Run qw(run);
+use Data::Dumper;
+use Time::Piece qw(localtime);
+use SilentCron::Storage::SQLite;
+use SilentCron::JobRun;
+
+sub usage {
+    print <<USAGE;
+Usage: ${\basename($0)} \
+    [ --must-succeed=2/10 ]
+    [ --job-name=my-job-name ]
+    -- command to run
+USAGE
+}
+
+GetOptions(
+    'must-succeed|s=s'  => \(my $MustSucceed = '2/10'),
+    'job-name|n'        => \my $JobName,
+    'debug!'            => \my $Debug,
+) or die usage();
+
+unless (@ARGV) {
+    say "Need a command to run!\n";
+    die usage();
+}
+$JobName //= join ' ', @ARGV;
+
+my $out;
+
+my $timestamp_before = localtime;
+say STDERR "DEBUG: Executing @ARGV"
+    if $Debug;
+run \@ARGV, \'', \$out, \$out;
+my $exit_code = $? >> 8;
+my $timestamp_after = localtime;
+if ( $Debug ) {
+    printf STDERR "DEBUG: %s finished with exit code %d and %d bytes of output/error\n",
+        $ARGV[0],
+        $exit_code,
+        length($out);
+}
+
+my $backend = SilentCron::Storage::SQLite->new(
+    debug => $Debug,
+);
+
+my $run = SilentCron::JobRun->new(
+    job_name        => $JobName,
+    output          => $out,
+    exit_code       => $exit_code,
+    start_time      => $timestamp_before,
+    end_time        => $timestamp_after,
+);
+
+$backend->record($run);
+
+exit $exit_code;
