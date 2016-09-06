@@ -61,19 +61,21 @@ CREATE TABLE ${\TABLE} (
 CREATE INDEX IF NOT EXISTS ${\TABLE}_jobname_exitcode ON ${\TABLE} ( job_name, exit_code );
 CREATE INDEX IF NOT EXISTS ${\TABLE}_jobname_endtime ON ${\TABLE} ( job_name, end_time );
 SCHEMA
-        say $block;
+        say STDERR "DEBUG: SQL: <<$block>>" if $self->{debug};
         $dbh->do($block);
     }
 }
 
 sub _has_table {
     my ($self, $dbh, $table) = @_;
-    my ($row) = $dbh->selectall_array(
+    my $sth = $dbh->prepare(
         q[SELECT name FROM sqlite_master WHERE type='table' AND name=?],
-        undef,
-        $table,
     );
-    return !!$row && $row->[0];
+    $sth->execute($table);
+    $sth->bind_columns(\my $result);
+    $sth->fetch;
+
+    return !!$result;
 }
 
 sub record {
