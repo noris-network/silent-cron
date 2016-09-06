@@ -38,6 +38,10 @@ as returning an exit status other than 0), `silent-cron` suppresses it output.
 Only when it fails 5 times in a row does it reproduce the failing job's
 output, causing cron to send an email.
 
+See the POD documentation in file `bin/silent-cron` for the full manual:
+
+    perldoc bin/silent-cron
+
 ## License
 
 This program is free software: you can redistribute it and/or modify

@@ -87,7 +87,7 @@ unless ( $run->is_success ) {
     else {
         my $SuccessCount = () = grep $_->is_success, @jobs;
         if ( $SuccessCount < $MinSuccess ) {
-            printf "Only %d runs out of the last %d were successful for job %s\n", 
+            printf "Only %d runs out of the last %d were successful for job %s\n",
                 $SuccessCount, $Total, $JobName;
             if (length $out) {
                 print "Job output was:\n$out";
