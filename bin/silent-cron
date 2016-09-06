@@ -15,8 +15,9 @@ use SilentCron::JobRun;
 sub usage {
     print <<USAGE;
 Usage: ${\basename($0)} \
-    [ --ok=2/10 ]
-    [ --job-name=my-job-name ]
+    [ --ok 2/10 ]
+    [ --job-name my-job-name ]
+    [ --statefile somefile ]
     -- command to run
 USAGE
 }
@@ -24,6 +25,7 @@ USAGE
 GetOptions(
     'ok|o=s'            => \(my $MustSucceed = '2/10'),
     'job-name|n=s'      => \my $JobName,
+    'statefile=s'       => \my $StorageLocation,
     'debug!'            => \my $Debug,
 ) or die usage();
 
@@ -59,7 +61,8 @@ if ( $Debug ) {
 }
 
 my $backend = SilentCron::Storage::SQLite->new(
-    debug => $Debug,
+    storage_location => $StorageLocation,
+    debug            => $Debug,
 );
 
 my $run = SilentCron::JobRun->new(
@@ -73,8 +76,8 @@ my $run = SilentCron::JobRun->new(
 $backend->record($run);
 
 unless ( $run->is_success ) {
-    my @jobs = grep $_->id != $run->id, $backend->list(
-        limit    => $Total + 1,
+    my @jobs = $backend->list(
+        limit    => $Total,
         job_name => $JobName,
     );
     if (@jobs < $Total ) {
