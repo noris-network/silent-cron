@@ -101,3 +101,68 @@ unless ( $run->is_success ) {
 }
 
 exit $exit_code;
+
+__END__
+
+=encoding UTF-8
+
+=head1 NAME
+
+silent-cron -- silence occasional failures from cron jobs (or other programs)
+
+=head1 SYNOPSIS
+
+    silent-cron -- command with args
+    silent-cron --jobname 'Cache cleanup' --ok 1/20 --statefile foo.sqlite3 \
+                -- command with args
+
+=head1 DESCRIPTION
+
+C<silent-cron> is a wrapper around commands that suppresses the output of
+those commands if they fail only occasionally. The definition of
+I<occasionally> can be given with the C<--ok> option. For example with the
+C<--ok 3/25>, you specify that output is suppressed, unless fewer than 3 of
+the last 25 runs of the job were successful.
+
+A job run counts as successful when it has exit code 0. C<silent-cron> always
+exits with the same status code as the command it wraps.
+
+The result of the last job runs is stored in a local SQLite database. You can
+override its location with C<--statefile otherfilename>. Other storage
+backends might be supported in future, if there is demand for it.
+
+=head1 OPTIONS
+
+=head2 --job-name <STRING>
+
+C<silent-cron> looks for previous executions of the same job correlating the
+job name of each job run. With the C<--job-name> command, you can override the
+default job name, which is simply the command all of its arguments joined by
+whitespace.
+
+If you run
+
+    silent-cron echo true
+
+the default job name is `echo true`.
+
+The job name is also used in the output of a failed job.
+
+=head2 --debug
+
+Write debugging information to STDERR.
+
+=head2 --ok <MIN>/<TOTAL>
+
+Specifies how many of the last job runs must have been successful. If less
+than C<< <MIN> >> out of last C<< <TOTAL> >> runs of this job have succeeded,
+
+=head2 --statefile <FILENAME>
+
+Specifies the file in which state record for the previous runs is kept.
+
+=head1 AUTHOR
+
+Moritz Lenz for the noris network G
+
+=cut
