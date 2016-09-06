@@ -15,15 +15,15 @@ use SilentCron::JobRun;
 sub usage {
     print <<USAGE;
 Usage: ${\basename($0)} \
-    [ --must-succeed=2/10 ]
+    [ --ok=2/10 ]
     [ --job-name=my-job-name ]
     -- command to run
 USAGE
 }
 
 GetOptions(
-    'must-succeed|s=s'  => \(my $MustSucceed = '2/10'),
-    'job-name|n'        => \my $JobName,
+    'ok|o=s'            => \(my $MustSucceed = '2/10'),
+    'job-name|n=s'      => \my $JobName,
     'debug!'            => \my $Debug,
 ) or die usage();
 
@@ -32,6 +32,16 @@ unless (@ARGV) {
     die usage();
 }
 $JobName //= join ' ', @ARGV;
+
+my ( $MinSuccess, $Total );
+
+if ( $MustSucceed =~ / ^ (\d+) \/ (\d+) $ /x ) {
+    $MinSuccess = $1;
+    $Total      = $2;
+}
+else {
+    die qq[Invalid argument --ok or -o: "$MustSucceed". Should be in the from <number>/<number>.\n];
+}
 
 my $out;
 
@@ -61,5 +71,30 @@ my $run = SilentCron::JobRun->new(
 );
 
 $backend->record($run);
+
+unless ( $run->is_success ) {
+    my @jobs = grep $_->id != $run->id, $backend->list(
+        limit    => $Total + 1,
+        job_name => $JobName,
+    );
+    if (@jobs < $Total ) {
+        printf STDERR "DEBUG: Have only %d runs, silencing error.\n", scalar(@jobs)
+            if $Debug;
+    }
+    else {
+        my $SuccessCount = () = grep $_->is_success, @jobs;
+        if ( $SuccessCount < $MinSuccess ) {
+            printf "Only %d runs out of the last %d were successful for job %s\n", 
+                $SuccessCount, $Total, $JobName;
+            if (length $out) {
+                print "Job output was:\n$out";
+            }
+            else {
+                print "The job produced no output.\n";
+            }
+            print "----\nThe exit code was $exit_code.\n";
+        }
+    }
+}
 
 exit $exit_code;
