@@ -7,10 +7,11 @@ use warnings;
 use Getopt::Long;
 use File::Basename qw(basename);
 use IPC::Run qw(run);
-use Data::Dumper;
 use Time::Piece qw(localtime);
 use SilentCron::Storage::SQLite;
 use SilentCron::JobRun;
+
+our $VERSION = '0.01';
 
 sub usage {
     print <<USAGE;
