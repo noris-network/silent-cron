@@ -1,0 +1,5 @@
+silent-cron (0.01-1) stable; urgency=low
+
+  * Initial Release.
+
+ -- Moritz Lenz <mlenz@noris.net>  Tue, 6 Sep 2016 12:34:10 +0200

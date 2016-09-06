@@ -1,0 +1,29 @@
+Source: silent-cron
+Section: perl
+Priority: optional
+Maintainer: Moritz Lenz <mlenz@noris.net>
+Build-Depends: debhelper (>= 9)
+Build-Depends-Indep: perl (>= 5.14.0)
+Standards-Version: 3.9.6
+
+Package: silent-cron
+Architecture: all
+Depends: ${misc:Depends}, ${perl:Depends},
+ libdbd-sqlite3-perl,
+ libdbi-perl,
+ libipc-run-perl,
+ libmoo-perl,
+ perl (>= 5.14.0)
+Description: silent-cron -- silence occasional failures from cron jobs (or other programs)
+ silent-cron is a wrapper around commands that suppresses the output of those
+ commands if they fail only occasionally. The definition of occasionally can
+ be given with the --ok option. For example with the --ok 3/25, you specify
+ that output is suppressed, unless fewer than 3 of the last 25 runs of the job
+ were successful.
+ .
+ A job run counts as successful when it has exit code 0. silent-cron always
+ exits with the same status code as the command it wraps.
+ .
+ The result of the last job runs is stored in a local SQLite database. You can
+ override its location with --statefile otherfilename. Other storage backends
+ might be supported in future, if there is demand for it.
