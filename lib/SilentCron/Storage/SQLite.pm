@@ -142,5 +142,33 @@ SQL
     return @result;
 }
 
+sub cleanup {
+    my $self = shift;
+    validate(@_, {
+        job_name    => 1,
+        keep        => 0,
+    });
+    my %opts = @_;
+
+    my $dbh = $self->_dbh;
+
+    my $sth = $dbh->prepare_cached(
+        "SELECT end_time FROM ${\TABLE} WHERE job_name = ? ORDER BY end_time DESC LIMIT 1 OFFSET ?"
+    );
+    $sth->execute($opts{job_name}, $opts{keep});
+    $sth->bind_columns(\my $cutoff_time);
+    $sth->fetch;
+    $sth->finish;
+
+    if ( $cutoff_time ) {
+        say STDERR "DEBUG: cleanup: deleting everything older than $cutoff_time"
+            if $self->{debug};
+        $dbh->do("DELETE FROM ${\TABLE} WHERE end_time < ?", undef, $cutoff_time);
+    }
+    else {
+        say STDERR "DEBUG: not cleaning up anything in the DB"
+            if $self->{debug};
+    }
+}
 
 1;

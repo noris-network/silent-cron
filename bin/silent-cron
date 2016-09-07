@@ -101,6 +101,8 @@ unless ( $run->is_success ) {
     }
 }
 
+$backend->cleanup( job_name => $JobName, keep => $Total * 5 );
+
 exit $exit_code;
 
 __END__
