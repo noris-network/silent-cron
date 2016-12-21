@@ -116,7 +116,7 @@ silent-cron -- silence occasional failures from cron jobs (or other programs)
 =head1 SYNOPSIS
 
     silent-cron -- command with args
-    silent-cron --jobname 'Cache cleanup' --ok 1/20 --statefile foo.sqlite3 \
+    silent-cron --job-name 'Cache cleanup' --ok 1/20 --statefile foo.sqlite3 \
                 -- command with args
 
 =head1 DESCRIPTION
